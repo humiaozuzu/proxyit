@@ -1,0 +1,121 @@
+#!/bin/bash
+#
+# Script for easily proxy change in OS X
+# Supports http/https/socks5/pac mode
+# https://github.com/humiaozuzu/proxyit
+#
+# Code of the ini parse are copied from
+# http://stackoverflow.com/questions/3724868/get-list-of-sections-from-ini-file-using-shell-sed-awk
+#
+# Change log
+# v1.0 9-Jan-2012 First Release
+
+ini_file=$HOME/.proxyit
+
+list() {
+    grep "^\[" $ini_file | xargs | tr -d '\[' | tr -d '\]'
+}
+
+ini_get() {
+    eval `sed -e 's/[[:space:]]*\=[[:space:]]*/=/g' \
+        -e 's/;.*$//' \
+        -e 's/[[:space:]]*$//' \
+        -e 's/^[[:space:]]*//' \
+        -e "s/^\(.*\)=\([^\"']*\)$/\1=\"\2\"/" \
+    < $ini_file \
+    | sed -n -e "/^\[$1\]/,/^\s*\[/{/^[^;].*\=.*/p;}"`
+
+    echo ${!2}
+}
+
+unset_proxy() {
+    networksetup -setautoproxystate "Wi-Fi" off
+    networksetup -setwebproxystate 'Wi-Fi' off
+    networksetup -setsecurewebproxystate 'Wi-Fi' off
+    networksetup -setsocksfirewallproxystate 'Wi-Fi' off
+}
+
+set_proxy() {
+    type=$(ini_get $1 type)
+
+    host=$(ini_get $1 host)
+    port=$(ini_get $1 port)
+    url=$(ini_get $1 url)
+
+    unset_proxy
+
+    case $type in
+        http )
+            echo http
+            networksetup -setsecurewebproxy "Wi-Fi" $host $port
+            networksetup -setwebproxy "Wi-Fi" $host $port
+            exit 1
+            ;;
+        socks )
+            echo socks
+            networksetup -setsocksfirewallproxy "Wi-Fi" $host $port
+            exit 1
+            ;;
+        pac )
+            echo pac
+            networksetup -setautoproxyurl "Wi-Fi" $url
+            exit 1
+            ;;
+    esac
+}
+
+
+# --- Main entry point ----------------------
+
+if [ $# -eq 0 ]; then
+    usage
+    exit 0
+fi
+
+# Sanity check command-line options. We want either
+# options like -l or arguments like Python, but not
+# both
+has_opts=0
+has_args=0
+for opt in $@; do
+    if [ $( echo $opt | cut -c1) = "-" ]; then
+        has_opts=1
+    else
+        has_args=1
+    fi
+done
+
+if [ $has_opts -eq 1 -a $has_args -eq 1 ]; then
+    usage
+    exit 1
+fi
+
+# Parse comand-line options
+while [ $# -gt 0 ]; do
+    case $1 in
+        -v | --version )
+            version
+            exit 1
+            ;;
+        list )
+            list
+            exit 1
+            ;;
+        set )
+            set_proxy $2
+            exit 1
+            ;;
+        unset )
+            unset_proxy
+            exit 1
+            ;;
+        -h | --help )
+            usage
+            exit 1
+            ;;
+        * ) # default case
+            echo Unknown argument $1
+            ;;
+    esac
+    shift
+done
