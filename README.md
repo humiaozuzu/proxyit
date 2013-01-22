@@ -14,6 +14,7 @@ Installation
 
 1. Copy `proxyit` to `/usr/local/bin`
 2. Give `networksetup` superuser permissions to prevent it keep asking password
+
 ``` bash
 sudo chmod +s /usr/sbin/networksetup
 ```
