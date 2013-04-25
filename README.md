@@ -1,7 +1,7 @@
 Proxyit
 =======
 
-Proxy changer for OS X
+Proxy switcher for OS X
 
 Principle
 ---------
@@ -13,7 +13,7 @@ Installation
 ------------
 
 1. Copy `proxyit` to `/usr/local/bin`
-2. Give `networksetup` superuser permissions to prevent it keep asking password
+2. Give `networksetup` superuser permissions to prevent it keeping asking password
 
 ``` bash
 sudo chmod +s /usr/sbin/networksetup
@@ -27,13 +27,13 @@ Example:
 ``` ini
 [linode]
 type=socks
-host=172.18.184.217
-port = 1088
+host=192.168.1.1
+port = 1018
 
 [buyvm]
 type=http
-host=172.18.184.111
-port=8501
+host=172.12.222.123
+port=8101
 
 [mal]
 type=pac
