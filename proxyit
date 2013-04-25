@@ -7,6 +7,9 @@
 # Code of the ini parse are copied from
 # http://stackoverflow.com/questions/3724868/get-list-of-sections-from-ini-file-using-shell-sed-awk
 #
+# Code of getting OS X current active network service copied from
+# http://hints.macworld.com/dlfiles/network_service_name.txt
+#
 # Change log
 # v1.0 9-Jan-2012 First Release
 
@@ -35,30 +38,41 @@ unset_proxy() {
     networksetup -setsocksfirewallproxystate 'Wi-Fi' off
 }
 
+get_current_service() {
+    SERVICE_GUID=`echo "open|||get State:/Network/Global/IPv4|||d.show" | \
+        tr '|||' '\n' | scutil | grep "PrimaryService" | awk '{print $3}'`
+
+    SERVICE_NAME=`echo "open|||get Setup:/Network/Service/$SERVICE_GUID|||d.show" |\
+        tr '|||' '\n' | scutil | grep "UserDefinedName" | awk -F': ' '{print $2}'`
+
+    echo $SERVICE_NAME
+}
+
 set_proxy() {
     type=$(ini_get $1 type)
 
     host=$(ini_get $1 host)
     port=$(ini_get $1 port)
     url=$(ini_get $1 url)
+    service=$(get_current_service)
 
     unset_proxy
 
     case $type in
         http )
             echo http
-            networksetup -setsecurewebproxy "Wi-Fi" $host $port
-            networksetup -setwebproxy "Wi-Fi" $host $port
+            networksetup -setsecurewebproxy $service $host $port
+            networksetup -setwebproxy $service $host $port
             exit 1
             ;;
         socks )
             echo socks
-            networksetup -setsocksfirewallproxy "Wi-Fi" $host $port
+            networksetup -setsocksfirewallproxy $service $host $port
             exit 1
             ;;
         pac )
             echo pac
-            networksetup -setautoproxyurl "Wi-Fi" $url
+            networksetup -setautoproxyurl $service $url
             exit 1
             ;;
     esac
