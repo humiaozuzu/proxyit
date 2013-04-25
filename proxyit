@@ -32,10 +32,12 @@ ini_get() {
 }
 
 unset_proxy() {
-    networksetup -setautoproxystate "Wi-Fi" off
-    networksetup -setwebproxystate 'Wi-Fi' off
-    networksetup -setsecurewebproxystate 'Wi-Fi' off
-    networksetup -setsocksfirewallproxystate 'Wi-Fi' off
+    service=$(get_current_service)
+
+    networksetup -setautoproxystate $service off
+    networksetup -setwebproxystate $service off
+    networksetup -setsecurewebproxystate $service off
+    networksetup -setsocksfirewallproxystate $service off
 }
 
 get_current_service() {
