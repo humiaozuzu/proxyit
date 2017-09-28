@@ -15,6 +15,32 @@
 
 ini_file=$HOME/.proxyit
 
+usage() {
+    echo -e "proxyit usage.\n"
+    echo -e "proxyit list\n\t# list all available proxy settings"
+    echo -e "proxyit set [item]\n\t# use [item] proxy setting"
+    echo -e "proxyit unset\n\t# unset all proxy settings"
+
+    echo -e "\nConfiguration format"
+    echo "[linode]"
+    echo "type=socks"
+    echo "host=192.168.1.1"
+    echo -e "port = 1018\n"
+
+    echo "[buyvm]"
+    echo "type=http"
+    echo "host=172.12.222.123"
+    echo -e "port=8101\n"
+
+    echo "[mal]"
+    echo "type=pac"
+    echo "url=http://10.0.1.44/x.pac"
+}
+
+version() {
+    echo "proxyit version 2.0"
+}
+
 list() {
     grep "^\[" $ini_file | xargs | tr -d '\[' | tr -d '\]'
 }
@@ -34,10 +60,10 @@ ini_get() {
 unset_proxy() {
     service=$(get_current_service)
 
-    networksetup -setautoproxystate $service off
-    networksetup -setwebproxystate $service off
-    networksetup -setsecurewebproxystate $service off
-    networksetup -setsocksfirewallproxystate $service off
+    networksetup -setautoproxystate "$service" off
+    networksetup -setwebproxystate "$service" off
+    networksetup -setsecurewebproxystate "$service" off
+    networksetup -setsocksfirewallproxystate "$service" off
 }
 
 get_current_service() {
@@ -63,18 +89,18 @@ set_proxy() {
     case $type in
         http )
             echo http
-            networksetup -setsecurewebproxy $service $host $port
-            networksetup -setwebproxy $service $host $port
+            networksetup -setsecurewebproxy "$service" $host $port
+            networksetup -setwebproxy "$service" $host $port
             exit 1
             ;;
         socks )
             echo socks
-            networksetup -setsocksfirewallproxy $service $host $port
+            networksetup -setsocksfirewallproxy "$service" $host $port
             exit 1
             ;;
         pac )
             echo pac
-            networksetup -setautoproxyurl $service $url
+            networksetup -setautoproxyurl "$service" $url
             exit 1
             ;;
     esac
